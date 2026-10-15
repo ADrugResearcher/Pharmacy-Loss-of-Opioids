@@ -148,6 +148,13 @@ pharm_new <- pharm_new |>
   mutate(facility = ifelse(str_detect(facility, "Long Term"),
                            "All LTC", 
                            facility))
+
+pharm_new <- pharm_new |> 
+  mutate(incident_subtype = ifelse(str_detect(incident_subtype,
+                                              "Loss Unexplained"),
+                                   "Loss Unexplained",
+                                   incident_subtype))
+
 # Turning the grouped category above into an ordered factor g
 pharm_new$grouped_cat <- factor(pharm_new$grouped_cat, 
                                 levels = c("1-99",
@@ -176,6 +183,10 @@ play <- pharm_new |>
   select(id, province, the_year, generic_match, pharma_class,
          incident_type, incident_subtype,
          subs_quant, unit) |>
+  mutate(incident_subtype = ifelse(str_detect(incident_subtype, 
+                                              "Loss Unexplained"),
+                                  "Loss Unexplained",
+                                   incident_subtype)) |> 
   mutate(generic_match = 
            ifelse(str_detect(
              generic_match, "[Aa]mphetamine") &
@@ -216,7 +227,7 @@ p_lt <- play |>
   select(-incident_type)
 
 
-
+ 
 pharm_new <- pharm_new |> 
   filter(facility %in% tosearch
         ) |> 
@@ -237,7 +248,7 @@ pharm_new$substance_data <- factor(pharm_new$substance_data,
                                   unique(pharm_new$substance_data[order(
                                     pharm_new$unit_type)]), 
                                 ordered=TRUE)
-play <- play2
+
 source("pop_cleaner.R")
 save(pharm_new, pop, play2, file = "pharm_new.RData")
 pharm_clean <- pharm_new |> 

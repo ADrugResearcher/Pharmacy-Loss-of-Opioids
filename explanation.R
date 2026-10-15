@@ -10,3 +10,4 @@ new_panel2 <- function(){
   tags$p("If you would like to explore the data yourself, you can either use the dataset provided by Carman, or you can access my code", tags$a("here", href = "https://github.com/ADrugResearcher/pharmacy_data"))
   )
 }
+
