@@ -218,29 +218,44 @@ server <- function(input, output, session) {
       mutate(grouped_cat = fct_rev(grouped_cat)) |> 
       left_join(pop)
     validate(
-      need(nrow(inc_plot) >0.9, "Please select some outputs")
+      need(nrow(inc_plot) >0.9, "Please select some outputs") 
     )
 
+    max_plot = function(){
+      inc_plot |> 
+      group_by(province, the_year, generic_match) |> 
+      summarise(max_count = sum(the_count)) |> 
+      pull(max_count) |> 
+      max()
+    }
+
+    tgroup_length = length(tgroups())
+    
     if(input$percap == "Yes"){
       inc_plot <- inc_plot |> 
         mutate(the_count = the_count/population * 100000)
       the_title = paste("Oxycodone & Hydromorphone Tablets ", 
                         t_incidents(), " per 100 000 People", sep = "")
       y_ax = "Occurrences per 100 000 People"
+      max_y = round(max_plot(), 2) + 0.5
+      custom_y = function(){
+        scale_y_continuous(
+                           expand = c(0,0), 
+                           limits = c(0, max_y))
+      }
     } else {
       the_title = paste("Oxycodone & Hydromorphone Tablets ", 
                         t_incidents(), " by Year", sep = "")
       y_ax = "Number of Occurrences"
+      max_y = round(max_plot(), -2) + 100
+      custom_y <- function(){
+        scale_y_continuous(
+                           expand = c(0,0), 
+                           limits = c(0, max_y))
+      }
     }
-    max_y = 
-      inc_plot |> 
-      group_by(province, the_year, generic_match) |> 
-      summarise(max_count = sum(the_count)) |> 
-      pull(max_count) |> 
-      max()
-    max_y = max_y + max_y * 0.1
-    tgroup_length = length(tgroups())
-    
+
+
     the_sub <- paste("Grouped by", tgroups()[1], 
                      "to", tgroups()[tgroup_length],
                      sep = " ")
@@ -248,11 +263,8 @@ server <- function(input, output, session) {
                          fill = grouped_cat)) +
       geom_col() +
       scale_x_date(date_labels = "%Y", breaks = the_years) +
-      scale_y_continuous(expand = c(0,0), limits = c(0, max_y)) +
+      custom_y() +
       scale_fill_manual(values = my_colours) +
-      scale_y_continuous(
-                         expand = c(0,0),
-                         breaks = integer_breaks(n = 6)) +
       labs(x = "Year", y = y_ax, fill = "Quantity Reported",
            title = the_title, 
            subtitle = the_sub,
